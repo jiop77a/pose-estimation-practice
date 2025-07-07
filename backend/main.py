@@ -5,12 +5,23 @@ import requests
 from PIL import Image, ImageDraw
 import os
 from dotenv import load_dotenv
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 # Load environment variables from .env file
 load_dotenv()
 
 # Initialize the FastAPI app
 app = FastAPI()
+
+# Allow all origins for development (can be restricted later for production)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # Allow local frontend
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
 
 # Get API configuration from environment variables
 ROBOFLOW_API_KEY = os.getenv("ROBOFLOW_API_KEY")
