@@ -3,13 +3,24 @@ from fastapi.responses import StreamingResponse
 from io import BytesIO
 import requests
 from PIL import Image, ImageDraw
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Initialize the FastAPI app
 app = FastAPI()
 
-# Replace with your Roboflow API key
-ROBOFLOW_API_KEY = "YOUR_API_KEY_HERE"
-ROBOFLOW_MODEL_URL = "https://serverless.roboflow.com/coco-pose-detection/6"
+# Get API configuration from environment variables
+ROBOFLOW_API_KEY = os.getenv("ROBOFLOW_API_KEY")
+ROBOFLOW_MODEL_URL = os.getenv("ROBOFLOW_MODEL_URL")
+
+# Validate that required environment variables are set
+if not ROBOFLOW_API_KEY:
+    raise ValueError("ROBOFLOW_API_KEY environment variable is required")
+if not ROBOFLOW_MODEL_URL:
+    raise ValueError("ROBOFLOW_MODEL_URL environment variable is required")
 
 
 @app.post("/predict")
@@ -38,7 +49,13 @@ async def predict(file: UploadFile = File(...)):
         # Draw the keypoints on the image
         draw = ImageDraw.Draw(image)
         for point in keypoints:
-            x, y = int(point["x"]), int(point["y"])
+            x, y, confidence = (
+                int(point["x"]),
+                int(point["y"]),
+                float(point["confidence"]),
+            )
+            if confidence < 0.5:
+                continue
             draw.ellipse(
                 [x - 5, y - 5, x + 5, y + 5], fill="red"
             )  # Draw small red circles for keypoints
